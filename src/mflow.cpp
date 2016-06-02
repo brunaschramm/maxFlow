@@ -84,32 +84,61 @@ void MaxFlow::criarRedeFluxo()
 //    cout << m_capacidadeMax << " - " << aux << endl;
 }
 
-//bool MaxFlow::bfs(map<string,map<string,int> > rGraph, map<string,string> &parent){
-//    map<string,bool> visited;
-//    for(int i = 0; i < keys.size(); i++ ){
-//        visited[keys[i]] = false;
-//    }
-//    queue<string> vertex;
-//    vertex.push("SOURCE");
-//    visited["SOURCE"] = true;
-//    parent["SOURCE"] = "";
-//    while(!vertex.empty()){
-//        string u = vertex.front();
-//        vertex.pop();
-//        for(map<string,int>::iterator it = rGraph[u].begin(); it!=rGraph[u].end(); ++it){
-//            if(visited[it->first] == false && it->second>0){
-//                    vertex.push(it->first);
-//                    parent[it->first] = u;
-//                    visited[it->first] = true;
-//            }
-//        }
-//    }
-//    return (visited["SINK"] == true);
-//}
-
-void MaxFlow::calcularFluxoMaximo()
+bool MaxFlow::bfs(map<string,string> &parent)
 {
+    map<string,bool> visited;
+    for(map<string, map<string, int> >::iterator it = m_grafo.begin(); it != m_grafo.end(); it++ )
+    {
+        visited[it->first] = false;
+    }
+    queue<string> vertex;
+    vertex.push(INICIO);
+    visited[INICIO] = true;
+    parent[INICIO] = "";
+    while(!vertex.empty())
+    {
+        string u = vertex.front();
+        vertex.pop();
+        for(map<string,int>::iterator it = m_grafo[u].begin(); it != m_grafo[u].end(); ++it)
+        {
+            if(visited[it->first] == false && it->second > 0)
+            {
+                    vertex.push(it->first);
+                    parent[it->first] = u;
+                    visited[it->first] = true;
+            }
+        }
+    }
+    return visited[FIM];
+}
 
+int MaxFlow::calcularFluxoMaximo()
+{
+    cout <<  "Calculando fluxo máximo" << endl;
+    string u,v;
+
+    map<string,string> parent;
+
+    int max_flow = 0;
+
+    while(bfs(parent))
+    {
+        int path_flow = INT_MAX;
+        for(v = FIM; v!= INICIO ; v = parent[v])
+        {
+            u = parent[v];
+            path_flow = min(path_flow,m_grafo[u][v]);
+        }
+        for(v = FIM; v!= INICIO ; v = parent[v])
+        {
+            u = parent[v];
+            m_grafo[u][v] -= path_flow;
+            if( m_grafo[v].find(u) == m_grafo[v].end() ) m_grafo[v][u] = 0;
+            m_grafo[v][u] += path_flow;
+        }
+        max_flow += path_flow;
+    }
+    return max_flow;
 }
 
 void MaxFlow::executar()
@@ -120,9 +149,9 @@ void MaxFlow::executar()
 
         criarRedeFluxo();
 
-        calcularFluxoMaximo();
+        int fluxoMax = calcularFluxoMaximo();
 
-        return;
+        cout << "Fluxo máximo " << fluxoMax << endl;
     }
 }
 

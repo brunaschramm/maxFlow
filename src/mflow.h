@@ -7,7 +7,9 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <queue>
 #include <math.h>
+#include <limits.h>
 #include "utils.h"
 
 using namespace std;
@@ -23,14 +25,16 @@ class MaxFlow {
         map<string, int > m_clientesPorProduto;
 
         bool carregarArquivo();
+        void criarRedeFluxo();
+        int calcularFluxoMaximo();
+        void exibirGrafo();
+        bool bfs(map<string,string> &parent);
     public:
         MaxFlow( string &entrada ): m_arqEntrada(entrada), m_capacidadeMax(0)
         {
             m_grafo.clear();
             m_clientesPorProduto.clear();
         }
+
         void executar();
-        void criarRedeFluxo();
-        void calcularFluxoMaximo();
-        void exibirGrafo();
 };
