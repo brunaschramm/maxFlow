@@ -10,7 +10,6 @@ void MaxFlow::exibirGrafo()
             cout <<  "\t>> Produto : " << it2->first << endl;
         }
     }
-
 }
 
 bool MaxFlow::carregarArquivo()
@@ -27,7 +26,7 @@ bool MaxFlow::carregarArquivo()
     }
 
     string line, produto, clientes;
-    set<string> vClientes;
+    vector<string> vClientes;
 
     while(getline(arq, line))
     {
@@ -42,46 +41,25 @@ bool MaxFlow::carregarArquivo()
 
         split(clientes, ',', vClientes);
 
-        m_clientesPorProduto[produto] = vClientes.size();
+        m_grafo[produto][FIM] = vClientes.size();
 
-        for(set<string>::iterator it = vClientes.begin(); it != vClientes.end(); it++)
+        for(vector<string>::iterator it = vClientes.begin(); it != vClientes.end(); it++)
         {
             m_grafo[*it][produto] = 1;
+            if(m_grafo[INICIO].find(*it) == m_grafo[INICIO].end()) m_grafo[INICIO][*it] = 1;
+            else m_grafo[INICIO][*it] += 1;
         }
     }
     arq.close();
 
+    // Aplica restricao no grafo
+    for(map<string, int>::iterator it = m_grafo[INICIO].begin(); it != m_grafo[INICIO].end(); it++ )
+    {
+        it->second = it->second*m_porcentagemAvaliacoes;
+        m_capacidadeMax += it->second;
+    }
+
     return true;
-}
-
-void MaxFlow::criarRedeFluxo()
-{
-    cout << "Criando rede de fluxo" << endl;
-    int capacidadeCliente;
-    for(map< string, map< string, int > >::iterator it = m_grafo.begin() ; it != m_grafo.end(); it++ )
-    {
-        if(it->first != INICIO)
-        {
-    //        capacidadeCliente = ceil(it->second.size() * 0.4);
-            capacidadeCliente = it->second.size();
-            m_grafo[INICIO][it->first] = capacidadeCliente;
-            m_capacidadeMax += capacidadeCliente;
-//            cout <<  "[1]>> " << it->first << " - " << capacidadeCliente << endl;
-        }
-    }
-
-    m_grafo[FIM][INICIO] = m_capacidadeMax;
-
-    int aux = 0;
-
-    for(map<string, int >::iterator it = m_clientesPorProduto.begin(); it != m_clientesPorProduto.end(); it++)
-    {
-        m_grafo[it->first][FIM] = it->second;
-        aux += it->second;
-//        cout <<  "[2]>> " << it->first << " - " << it->second << endl;
-    }
-
-//    cout << m_capacidadeMax << " - " << aux << endl;
 }
 
 bool MaxFlow::bfs(map<string,string> &parent)
@@ -147,11 +125,17 @@ void MaxFlow::executar()
     {
 //        exibirGrafo();
 
-        criarRedeFluxo();
-
         int fluxoMax = calcularFluxoMaximo();
 
-        cout << "Fluxo máximo " << fluxoMax << endl;
+        if (fluxoMax == m_capacidadeMax)
+        {
+            cout << "Fluxo máximo encontrado respeita a restrição!" << endl;
+        }
+        else {
+            cout << "Fluxo máximo não respeita restrição!" << endl;
+        }
+
+        cout << "\tFluxo máximo encontrado (" << fluxoMax << ") - Capacidade mínimo de avalições (" << m_capacidadeMax << ")" << endl;
     }
 }
 
@@ -159,16 +143,25 @@ int main(int argv, char *argc[])
 {
     double start = getUnixTime();
 
-    if(argv != 2)
+    if(argv != 3)
     {
-        cout << "Usar: " << argc[0] << " <path-entrada>" << endl;
+        cout << "Usar: " << argc[0] << " <path-entrada> <porcentagem-maxima-avaliacao>" << endl;
         exit(1);
     }
 
     string arquivoEntrada(argc[1]);
-//    cout << "- Arquivo de entrada = [" << arquivoEntrada << "]" << endl;
 
-    MaxFlow maxFlow = MaxFlow( arquivoEntrada );
+    float porcentagemAvaliacoes = atof(argc[2]);
+
+    if( porcentagemAvaliacoes < 0.0 || porcentagemAvaliacoes > 40.0)
+    {
+        cout << "Valor da % máxima de avaliações inválido: " << porcentagemAvaliacoes << ". Deve ser de 0 a 40%." << endl;
+        exit(1);
+    }
+
+    porcentagemAvaliacoes /= 100.0;
+
+    MaxFlow maxFlow = MaxFlow( arquivoEntrada, porcentagemAvaliacoes );
 
     maxFlow.executar();
 
