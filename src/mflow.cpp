@@ -90,6 +90,38 @@ bool MaxFlow::bfs(map<string,string> &parent)
     return visited[FIM];
 }
 
+bool MaxFlow::bfsOpt(map<string,string> &parent)
+{
+    set<string> visited;
+    stack<string> vertex;
+    vertex.push(INICIO);
+    visited.insert(INICIO);
+    string u;
+    
+    parent[INICIO] = "";
+    map<string,int>::iterator it;
+    while(!vertex.empty())
+    {
+        u = vertex.top();
+        vertex.pop();
+        for(it = m_grafo[u].begin(); it != m_grafo[u].end(); ++it)
+        {
+            if( (visited.find(it->first) == visited.end()) && it->second > 0)
+            {
+                vertex.push(it->first);
+                parent[it->first] = u;
+                visited.insert(it->first);
+                if (it->first == FIM)
+                {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+
 int MaxFlow::calcularFluxoMaximo()
 {
     cout <<  "Calculando fluxo máximo" << endl;
@@ -98,21 +130,28 @@ int MaxFlow::calcularFluxoMaximo()
     map<string,string> parent;
 
     int max_flow = 0;
-
-    while(bfs(parent))
+    int cont = 0;
+    while(bfsOpt(parent))
     {
+        //cout << ">> " << cont << endl;cont++;
         int path_flow = INT_MAX;
         for(v = FIM; v!= INICIO ; v = parent[v])
         {
             u = parent[v];
             path_flow = min(path_flow,m_grafo[u][v]);
+            //cout << "Path flow - " << path_flow << endl;
         }
         for(v = FIM; v!= INICIO ; v = parent[v])
         {
             u = parent[v];
+            //cout << u << " - " << v << endl;
+            //cout << "\t" << m_grafo[u][v] << endl;
             m_grafo[u][v] -= path_flow;
+            //cout << "\t" << m_grafo[u][v] << endl;
             if( m_grafo[v].find(u) == m_grafo[v].end() ) m_grafo[v][u] = 0;
+            //cout << "\t" << m_grafo[v][u] << endl;
             m_grafo[v][u] += path_flow;
+            //cout << "\t" << m_grafo[v][u] << endl;
         }
         max_flow += path_flow;
     }
@@ -123,7 +162,7 @@ void MaxFlow::executar()
 {
     if( carregarArquivo() )
     {
-//        exibirGrafo();
+        //exibirGrafo();
 
         int fluxoMax = calcularFluxoMaximo();
 

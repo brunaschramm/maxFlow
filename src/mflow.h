@@ -8,6 +8,7 @@
 #include <vector>
 #include <set>
 #include <queue>
+#include <stack>
 #include <math.h>
 #include <limits.h>
 #include "utils.h"
@@ -28,6 +29,7 @@ class MaxFlow {
         int calcularFluxoMaximo();
         void exibirGrafo();
         bool bfs(map<string,string> &parent);
+        bool bfsOpt(map<string,string> &parent);
     public:
         MaxFlow( string &entrada, float &porcentagemAvaliacoes ): m_arqEntrada(entrada), m_capacidadeMax(0), m_porcentagemAvaliacoes(porcentagemAvaliacoes)
         {
